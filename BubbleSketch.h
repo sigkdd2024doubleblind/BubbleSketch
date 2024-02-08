@@ -2,7 +2,7 @@
 #define _BUBBLE_SKETCH_H
 
 #define TEST1
-#define TEST2
+// #define TEST2
 #include <string>
 #define CHECK_TOP
 
@@ -260,75 +260,6 @@ void BubbleSketch::Insert(const std::string &str) {
     uint64_t keys[2] = {hash_value[0] % _bucket_num,
                         hash_value[1] % _bucket_num};
 
-#ifdef TEST2
-    Bucket &bucket0 = _buckets[0][keys[0]];
-    int empty_array_index = 0;
-    int empty_entry_index = -1;
-    for (int i = 0; i < MAX_ENTRY; i++) {
-        if (bucket0.Empty(i)) {
-            empty_array_index = 0;
-            empty_entry_index = i;
-            break;
-        }
-        if (bucket0.Equal(i, fp)) {
-            bucket0.Insert(i);
-            bucket0.BucketSort(i);
-            if (bucket0.get_entry_count(0) > _f_max) {
-                _f_max = bucket0.get_entry_count(i);
-
-#ifdef DYNAMIC_THRESHOLD
-                _threshold1 = _f_max / _K * 1.5;
-#endif
-            }
-            if (i != 0 && bucket0.get_entry_count(i) > _threshold1) {
-                if (kickout(MAX_KICK_OUT, hash_value[0], bucket0, i, 0)) {
-                    bucket0.Remove(i);
-                }
-            }
-            return;
-        }
-    }
-    Bucket &bucket1 = _buckets[1][keys[1]];
-    for (int i = 0; i < MAX_ENTRY; i++) {
-        if (bucket1.Empty(i)) {
-            empty_array_index = 1;
-            empty_entry_index = i;
-            break;
-        }
-        if (bucket1.Equal(i, fp)) {
-            bucket1.Insert(i);
-            bucket1.BucketSort(i);
-            if (bucket1.get_entry_count(0) > _f_max) {
-                _f_max = bucket1.get_entry_count(i);
-#ifdef DYNAMIC_THRESHOLD
-                _threshold1 = _f_max / _K * 1.5;
-#endif
-            }
-            if (i != 0 && bucket1.get_entry_count(i) > _threshold1) {
-                if (kickout(MAX_KICK_OUT, hash_value[1], bucket1, i, 1)) {
-                    bucket1.Remove(i);
-                }
-            }
-            return;
-        }
-    }
-    if (empty_entry_index != -1) {
-        if (empty_array_index == 0) {
-            bucket0.Insert(empty_entry_index, fp, str);
-        } else {
-            bucket1.Insert(empty_entry_index, fp, str);
-        }
-        return;
-    }
-
-    if (bucket0.get_entry_count(MAX_ENTRY - 1) <
-        bucket1.get_entry_count(MAX_ENTRY - 1)) {
-        bucket0.Lossy(MAX_ENTRY - 1, _lossy_func);
-    } else {
-        bucket1.Lossy(MAX_ENTRY - 1, _lossy_func);
-    }
-#else
-
     Bucket &bucket0 = _buckets[0][keys[0]];
     Bucket &bucket1 = _buckets[1][keys[1]];
     // 尝试在第一个桶的第一个位置插入
@@ -337,32 +268,26 @@ void BubbleSketch::Insert(const std::string &str) {
         bucket0.Insert(0);
         if (bucket0.get_entry_count(0) > _f_max) {
             _f_max = bucket0.get_entry_count(0);
+            _threshold1 = std::max(_threshold1, static_cast<int>(_f_max * 1.5 / _K));
         }
         return;
     }
     if (bucket0.Empty(0)) {
         bucket0.Insert(0, fp, str);
-        if (bucket0.get_entry_count(0) > _f_max) {
-            _f_max = bucket0.get_entry_count(0);
-        }
         return;
     }
-    // 尝试在第2个桶的第一个位置插入
 
+    // 尝试在第2个桶的第一个位置插入
     if (bucket1.Equal(0, fp)) {
         bucket1.Insert(0);
         if (bucket1.get_entry_count(0) > _f_max) {
-            _f_max = bucket1.get_entry_count(0);
-            _threshold1 = _f_max * (1 / _K) * 1.5;
+            _f_max = bucket0.get_entry_count(0);
+            _threshold1 = std::max(_threshold1, static_cast<int>(_f_max * 1.5 / _K));
         }
         return;
     }
     if (bucket1.Empty(0)) {
         bucket1.Insert(0, fp, str);
-        if (bucket1.get_entry_count(0) > _f_max) {
-            _f_max = bucket1.get_entry_count(0);
-            _threshold1 = _f_max * (1 / _K) * 1.5;
-        }
         return;
     }
     // 如果前面的尝试都失败了，那么遍历桶中的其他位置
@@ -410,7 +335,6 @@ void BubbleSketch::Insert(const std::string &str) {
     } else {
         bucket1.Lossy(MAX_ENTRY - 1, _lossy_func);
     }
-#endif
 }
 
 std::pair<std::string, int> BubbleSketch::Query(int k) {

@@ -115,7 +115,7 @@ int main(int argc, char** argv)
     }
 
     // preparing BubbleSketch
-    func.push_back(new sketch::bubblesketch::BubbleSketch(48, K, MEM));
+    func.push_back(new sketch::bubblesketch::BubbleSketch(10, K, MEM));
 
     // preparing heavykeeper
     int hk_M;
