@@ -66,30 +66,30 @@ int main(int argc, char** argv)
 
     // preparing CM Sketch
     int CM_M = 0;
-    for (CM_M=1; 32*CM_M*CM_d+432*K<=MEM*1024*8; CM_M++);
+    for (CM_M=1; 32*CM_M*CM_d+360*K<=MEM*1024*8; CM_M++);
     --CM_M;
     if (CM_M <= 0) {
-        std::cout << "min heap is overflow (k is " << K << "), CM sketch can not be create" << std::endl;
+        std::cout << "min-heap is overflow (k is " << K << "), CM sketch can not be create" << std::endl;
     } else {
         func.push_back(new cmsketch(CM_M, K));
     }
 
     // preparing uss
-    int HU_M = 0;
-    for (HU_M=0; 32*HU_M*HU_d+432*K<=MEM*1024*8; HU_M++);
-    --HU_M;
-    if (HU_M <= 0) {
-        std::cout << "min heap is overflow (k is " << K << "), uss can not be create" << std::endl;
+    int USS_M = 0;
+    for (USS_M=0; 32*USS_M*HU_d+360*K<=MEM*1024*8; USS_M++);
+    --USS_M;
+    if (USS_M <= 0) {
+        std::cout << "save-all-potentiality (k is " << K << "), uss can not be create" << std::endl;
     } else {
-        func.push_back(new Uss(HU_M, K));
+        func.push_back(new Uss(USS_M, K));
     }
 
     //preparing WavingSketch
     int WS_M = 0;
-    for (WS_M=0; 32*WS_M*(WS_d+1)+432*K<=MEM*1024*8; WS_M++);
+    for (WS_M=0; 32*WS_M*(WS_d+1)<=MEM*1024*8; WS_M++);
     --WS_M;
     if (WS_M <= 0) {
-        std::cout << "min heap is overflow (k is " << K << "), waving sketch can not be create" << std::endl;
+        std::cout << "save-all-potentiality is overflow (k is " << K << "), waving sketch can not be create" << std::endl;
     } else {
         func.push_back(new wavingsketch(WS_M, K));
     }
@@ -104,12 +104,12 @@ int main(int argc, char** argv)
 
     // preparing cuckoocounter
     int cc_M;
-    for (cc_M = 0; 64 * cc_M*CC_d + 432 * K <= MEM * 1000 * 8; cc_M++) {} 
+    for (cc_M = 0; 64 * cc_M*CC_d + 360 * K <= MEM * 1024 * 8; cc_M++) {} 
     if (cc_M % 2 == 0) {
         cc_M--;
     }
     if (cc_M <= 0) {
-        std::cout << "min heap is overflow (k is " << K << "), cuckoo counter can not be create" << std::endl;
+        std::cout << "min-heap is overflow (k is " << K << "), cuckoo counter can not be create" << std::endl;
     } else {
         func.push_back(new cuckoocounter(cc_M, K, 3, 0.01));
     }
@@ -119,17 +119,17 @@ int main(int argc, char** argv)
 
     // preparing heavykeeper
     int hk_M;
-    for (hk_M=0; 32*hk_M*HK_d+432*K<=MEM*1024*8; hk_M++);
+    for (hk_M=0; 32*hk_M*HK_d+360*K<=MEM*1024*8; hk_M++);
     if (hk_M%2==0) hk_M--;
     if (hk_M<=0) {
-        std::cout << "min heap is overflow (k is " << K << "), heavy keeper can not be create" << std::endl;
+        std::cout << "min-heap is overflow (k is " << K << "), heavy keeper can not be create" << std::endl;
     } else {
         func.push_back(new heavykeeper(hk_M, K));
     }
 
     // preparing spacesaving
     int ss_M;
-    for (ss_M=1; 432*ss_M<=MEM*1024*8; ss_M++);
+    for (ss_M=1; 360*ss_M<=MEM*1024*8; ss_M++);
     func.push_back(new spacesaving(ss_M, K));
 
     // prepare clear
@@ -139,44 +139,41 @@ int main(int argc, char** argv)
     }
 
     // Inserting
-	timespec time1, time2;
-	long long resns;
-	char default_dataset[40]="./1.dat";
-	if(dataset[0]=='\0') strcpy(dataset, default_dataset);
-	cout<<"dataset: "<<dataset<<endl<<endl;
-	ifstream fin(dataset, ios::in|ios::binary);
-	if(!fin) {printf("Dataset not exists!\n");return -1;}
+    timespec time1, time2;
+    long long resns;
+    char default_dataset[40]="./1.dat";
+    if(dataset[0]=='\0') strcpy(dataset, default_dataset);
+    cout<<"dataset: "<<dataset<<endl<<endl;
+    ifstream fin(dataset, ios::in|ios::binary);
+    if(!fin) {printf("Dataset not exists!\n");return -1;}
     int packet_num = 0;
-	for (int i = 1; i <= m; i++)
-	{
+    for (int i = 1; i <= m; i++)
+    {
         if (fin.eof()) {
             break;
         }
         packet_num++;
-		fin.read(tmp, KEY_LEN);
-		tmp[KEY_LEN]='\0';
-		s[i] = string(tmp, KEY_LEN);
-		B[s[i]]++;
-	}
+        fin.read(tmp, KEY_LEN);
+        tmp[KEY_LEN]='\0';
+        s[i] = string(tmp, KEY_LEN);
+        B[s[i]]++;
+    }
     m = packet_num;
-    printf("flow num = %d\n", packet_num);
-    printf("flow type = %d\n", B.size());
 
+    printf("*************throughput（insert）************\n");
 
-	printf("*************throughput（insert）************\n");
-    
     for (auto &sketch_func : func) {
         clock_gettime(CLOCK_MONOTONIC, &time1);
         for (int i = 1; i <= m; i++) {
             sketch_func->Insert(s[i]);
         }
         clock_gettime(CLOCK_MONOTONIC, &time2);
-	        resns = (long long)(time2.tv_sec - time1.tv_sec) * 1000000000LL + (time2.tv_nsec - time1.tv_nsec);
+        resns = (long long)(time2.tv_sec - time1.tv_sec) * 1000000000LL + (time2.tv_nsec - time1.tv_nsec);
         double throughput = (double)1000.0 * m / resns;
         printf("throughput of %s (insert): %.6lf Mips\n", sketch_func->get_name().c_str(), throughput);
         insert_throughput[sketch_func->get_name()] = throughput;
     }
-        printf("*************throughput(query)************\n");
+    printf("*************throughput(query)************\n");
 
     for (auto &sketch_func : func) {
         std::cout << sketch_func->get_name() << " work" << std::endl;;
@@ -186,8 +183,8 @@ int main(int argc, char** argv)
     }
 
     printf("\npreparing true flow\n");
-	// preparing true flow
-	int cnt=0;
+    // preparing true flow
+    int cnt=0;
     for (map <string,int>::iterator sit=B.begin(); sit!=B.end(); sit++)
     {
         p[++cnt].x=sit->first;
@@ -226,5 +223,5 @@ int main(int argc, char** argv)
     // string resultFile = "result.csv";
     // writeResultToCSV(string(dataset), resultFile, MEM, K);
 
-	return 0;
+    return 0;
 }
