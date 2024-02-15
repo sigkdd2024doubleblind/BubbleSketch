@@ -1,4 +1,4 @@
-CPPFLAGS = -Wall -O3 -std=c++14 -lm -w -mcmodel=medium
+CPPFLAGS = -Wall -O3 -std=c++14 -lm -w
 PROGRAMS = main 
 
 all: $(PROGRAMS)

@@ -1,5 +1,5 @@
-#ifndef _hyperuss_H
-#define _hyperuss_H
+#ifndef _Uss_H
+#define _Uss_H
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -13,13 +13,13 @@
 #define HU_d 4
 #define rep(i,a,n) for(int i=a;i<=n;i++)
 using namespace std;
-class hyperuss : public sketch::BaseSketch{
+class Uss : public sketch::BaseSketch{
 private:
 	struct node { string ID; int C; } HK[HU_d][MAX_MEM+10];
 	BOBHash64 * bobhash;
 	int K, M2;
 public:
-	hyperuss(int M2, int K) :M2(M2), K(K) { bobhash = new BOBHash64(1005); }
+	Uss(int M2, int K) :M2(M2), K(K) { bobhash = new BOBHash64(1005); }
 	void clear()	{
 		for (int i = 0; i < HU_d; i++)
 			for (int j = 0; j <= M2 + 5; j++)
@@ -93,7 +93,7 @@ public:
 		return make_pair(q[k].x, q[k].y);
 	}
 	std::string get_name() {
-		return "hyperuss";
+		return "Uss";
 	}
 };
 #endif
